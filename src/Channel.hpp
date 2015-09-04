@@ -28,6 +28,8 @@ using asio::ip::udp;
 
 #define KICK_IF(err) if (CS_UNLIKELY(err)) { return; }
 
+#define FALSE_IF(err) if (CS_UNLIKELY(ec)) { return false; }
+
 namespace csocks
 {
 
@@ -116,7 +118,8 @@ public:
         config(Config::instance()), users(_users),
         ioService(_ioService), resolver(ioService),
         ds(ioService), us(ioService), dsu(ioService),
-        bufdr(config->initBufferSize), bufdw(config->initBufferSize),
+        bufdr(config->drBufferSize), bufdw(config->dwBufferSize),
+        bufur(config->urBufferSize), bufuw(config->uwBufferSize),
         dsVersion(0),
         authenticater(_authenticater), authority(NULL)
     {
@@ -133,6 +136,7 @@ public:
 
     void start()
     {
+        KICK_IF(!prepare());
         readNumMethods();
     }
 
@@ -788,10 +792,50 @@ private:
         }
     }
 
+    bool prepare()
+    {
+        boost::system::error_code ec;
+        {
+            asio::socket_base::receive_buffer_size option(config->drBufferSize);
+            ds.set_option(option, ec);
+            FALSE_IF(ec);
+        }
+        {
+            asio::socket_base::send_buffer_size option(config->dwBufferSize);
+            ds.set_option(option, ec);
+            FALSE_IF(ec);
+        }
+        {
+            asio::socket_base::receive_buffer_size option(config->urBufferSize);
+            us.set_option(option, ec);
+            FALSE_IF(ec);
+        }
+        {
+            asio::socket_base::send_buffer_size option(config->uwBufferSize);
+            us.set_option(option, ec);
+            FALSE_IF(ec);
+        }
+        if (config->dsTcpNodelay)
+        {
+            tcp::no_delay option(true);
+            ds.set_option(option, ec);
+            FALSE_IF(ec);
+        }
+        if (config->usTcpNodelay)
+        {
+            tcp::no_delay option(true);
+            us.set_option(option, ec);
+            FALSE_IF(ec);
+        }
+        return true;
+    }
+
 };
 
 }
 
 #undef KICK_IF
+
+#undef FALSE_IF
 
 #undef SINGLE_BYTE

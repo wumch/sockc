@@ -42,26 +42,27 @@ public:
 
 public:
     std::string programName;
-    boost::filesystem::path pidFile;
     std::size_t workerCount;
     std::size_t ioThreads;
     std::size_t stackSize;
-    bool memlock;
-    std::size_t maxOpenFiles;
 
     bool reuseAddress;
     std::size_t maxConnections;
     std::size_t backlog;
-    bool tcpNodelay;
+    bool dsTcpNodelay, usTcpNodelay;
 
     std::size_t ioServiceNum;
     boost::asio::ip::address host;
     uint16_t port;
 
+    boost::asio::ip::address serverHost;
+    uint16_t serverPort;
+
     std::time_t dsRecvTimeout, dsSendTimeout,
         usRecvTimeout, usSendTimeout;
 
-    std::size_t initBufferSize;     // 认证前 buffer-size。
+    std::size_t drBufferSize, dwBufferSize,
+        urBufferSize, uwBufferSize;
 
     bool multiThreads, multiIoThreads;
     mutable boost::mutex workMutex, ioMutex;
