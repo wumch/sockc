@@ -44,7 +44,10 @@ public:
     std::string programName;
     std::size_t workerCount;
     std::size_t ioThreads;
+#ifdef __linux__
+    boost::filesystem::path pidFile;
     std::size_t stackSize;
+#endif
 
     bool reuseAddress;
     std::size_t maxConnections;
@@ -55,8 +58,10 @@ public:
     boost::asio::ip::address host;
     uint16_t port;
 
-    boost::asio::ip::address serverHost;
-    uint16_t serverPort;
+    boost::asio::ip::address usHost;
+    uint16_t usPort;
+
+    std::string username, password;
 
     std::time_t dsRecvTimeout, dsSendTimeout,
         usRecvTimeout, usSendTimeout;

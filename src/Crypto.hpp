@@ -5,7 +5,6 @@
 #include <boost/static_assert.hpp>
 #include <crypto++/modes.h>
 #include <crypto++/aes.h>
-#include "Buffer.hpp"
 
 namespace csocks {
 
@@ -31,8 +30,6 @@ public:
 
     void encrypt(const uint8_t* in, std::size_t len, uint8_t* out)
     {
-        std::memcpy(out, in, len);
-        return;
         encor.ProcessData(out, in, len);
     }
 
@@ -48,23 +45,37 @@ public:
 
     void decrypt(const uint8_t* in, std::size_t len, uint8_t* out)
     {
-        std::memcpy(out, in, len);
-        return;
         decor.ProcessData(out, in, len);
     }
 
     void setEncKeyWithIv(const char* _key, std::size_t keyLen,
         const char* _iv, std::size_t ivLen)
     {
-    	encor.SetKeyWithIV(reinterpret_cast<const byte*>(_key), keyLen,
+        setEncKeyWithIv(reinterpret_cast<const byte*>(_key), keyLen,
             reinterpret_cast<const byte*>(_iv), ivLen);
+    }
+
+    void setEncKeyWithIv(const byte* _key, std::size_t keyLen,
+        const byte* _iv, std::size_t ivLen)
+    {
+        CS_DUMP(std::string((char*)_key, keyLen));
+        CS_DUMP(std::string((char*)_iv, ivLen));
+        encor.SetKeyWithIV(_key, keyLen, _iv, ivLen);
     }
 
     void setDecKeyWithIv(const char* _key, std::size_t keyLen,
         const char* _iv, std::size_t ivLen)
     {
-    	decor.SetKeyWithIV(reinterpret_cast<const byte*>(_key), keyLen,
+        setDecKeyWithIv(reinterpret_cast<const byte*>(_key), keyLen,
             reinterpret_cast<const byte*>(_iv), ivLen);
+    }
+
+    void setDecKeyWithIv(const byte* _key, std::size_t keyLen,
+        const byte* _iv, std::size_t ivLen)
+    {
+        CS_DUMP(std::string((char*)_key, keyLen));
+        CS_DUMP(std::string((char*)_iv, ivLen));
+        decor.SetKeyWithIV(_key, keyLen, _iv, ivLen);
     }
 };
 

@@ -40,6 +40,7 @@ public:
 private:
     void savePid()
     {
+#ifdef linux
         if (boost::filesystem::exists(config->pidFile))
         {
             if (boost::filesystem::file_size(config->pidFile) > 0)
@@ -47,6 +48,7 @@ private:
                 CS_DIE("pid-file [" << config->pidFile << "] already exists and is not empty");
             }
         }
+#endif
 
         boost::filesystem::path dir(config->pidFile.parent_path());
         if (!boost::filesystem::is_directory(dir))

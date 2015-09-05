@@ -48,7 +48,7 @@ private:
 
     void handleAccept(const boost::system::error_code& err, boost::shared_ptr<Channel>& channel)
     {
-        CS_SAY("recevied");
+        CS_SAY("accepted");
         if (CS_BLIKELY(!err))
         {
             channel->start();

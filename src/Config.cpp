@@ -68,11 +68,21 @@ void Config::init(int argc, char* argv[])
 
 void Config::initDesc()
 {
+#ifdef __linux__
     boost::filesystem::path defaultPidFile("/var/run/" + programName + ".pid");
+#endif
+
     desc.add_options()
         ("host", boost::program_options::value<std::string>()->default_value(stage::getLanIP()))
 
         ("port", boost::program_options::value<uint16_t>()->default_value(1080))
+
+        ("upstream-host", boost::program_options::value<std::string>(), "upstream host")
+
+        ("upstream-port", boost::program_options::value<uint16_t>()->default_value(443), "upstream port")
+
+        ("username", boost::program_options::value<std::string>(), "username for authenticate to upstream")
+        ("password", boost::program_options::value<std::string>(), "password for authenticate to upstream")
 
         ("reuse-address", boost::program_options::bool_switch()->default_value(true),
             "whether reuse-address on startup or not, default on.")
@@ -83,8 +93,13 @@ void Config::initDesc()
         ("upstream-tcp-nodelay", boost::program_options::bool_switch()->default_value(true),
             "enables tcp-nodelay feature for upstream socket or not, default on.")
 
+#ifdef __linux__
+        ("pid-file", boost::program_options::value<boost::filesystem::path>()->default_value(defaultPidFile),
+            ("pid file, default" + defaultPidFile.string() + ".").c_str())
+
         ("stack-size", boost::program_options::value<std::size_t>()->default_value(stage::getRlimitCur(RLIMIT_STACK)),
             "stack size limit (KB), default not set.")
+#endif
 
         ("worker-count", boost::program_options::value<std::size_t>()->default_value(stage::getCpuNum() - 1),
             "num of worker processed, default is num of CPUs minus 1.")
@@ -109,6 +124,19 @@ void Config::initDesc()
 
         ("upstream-send-timeout", boost::program_options::value<std::time_t>()->default_value(30),
             "timeout for send to uptream (in second), 0 stands for never timeout, default 30s.")
+
+        ("downstream-read-buffer-size", boost::program_options::value<std::size_t>()->default_value(32),
+            "size of read-buffer for downstream (KB), at least 1, default 32.")
+
+        ("downstream-write-buffer-size", boost::program_options::value<std::size_t>()->default_value(32),
+            "size of write-buffer for downstream (KB), at least 1, default 32.")
+
+        ("upstream-read-buffer-size", boost::program_options::value<std::size_t>()->default_value(32),
+            "size of read-buffer for upstream (KB), at least 1, default 32.")
+
+        ("upstream-write-buffer-size", boost::program_options::value<std::size_t>()->default_value(32),
+            "size of write-buffer for upstream (KB), at least 1, default 32.")
+
     ;
 }
 
@@ -126,8 +154,18 @@ void Config::load(boost::filesystem::path file)
 
     host = boost::asio::ip::address_v4::from_string(options["host"].as<std::string>());
     port = options["port"].as<uint16_t>();
+    usHost = boost::asio::ip::address_v4::from_string(options["upstream-host"].as<std::string>());
+    usPort = options["upstream-port"].as<uint16_t>();
+
+    username = options["username"].as<std::string>();
+    password = options["password"].as<std::string>();
+
     reuseAddress = options["reuse-address"].as<bool>();
+
+#ifdef __linux__
+    pidFile = options["pid-file"].as<boost::filesystem::path>();
     stackSize = options["stack-size"].as<std::size_t>() << 10;
+#endif
     workerCount = options["worker-count"].as<std::size_t>();
     ioThreads = options["io-threads"].as<std::size_t>();
     maxConnections = options["max-connections"].as<std::size_t>();
@@ -141,13 +179,23 @@ void Config::load(boost::filesystem::path file)
     usRecvTimeout = options["upstream-receive-timeout"].as<std::time_t>();
     usSendTimeout = options["upstream-send-timeout"].as<std::time_t>();
 
+    drBufferSize = options["downstream-read-buffer-size"].as<std::size_t>() << 10;
+    dwBufferSize = options["downstream-write-buffer-size"].as<std::size_t>() << 10;
+    urBufferSize = options["upstream-read-buffer-size"].as<std::size_t>() << 10;
+    uwBufferSize = options["upstream-write-buffer-size"].as<std::size_t>() << 10;
+
     multiThreads = workerCount > 1;
     multiIoThreads = ioThreads > 1;
 
     CS_SAY(
         "loaded configs in [" << file.string() << "]:" << std::endl
+        _CSOCKS_OUT_CONFIG_PROPERTY(programName)
         _CSOCKS_OUT_CONFIG_PROPERTY(host)
         _CSOCKS_OUT_CONFIG_PROPERTY(port)
+        _CSOCKS_OUT_CONFIG_PROPERTY(usHost)
+        _CSOCKS_OUT_CONFIG_PROPERTY(usPort)
+        _CSOCKS_OUT_CONFIG_PROPERTY(username)
+        _CSOCKS_OUT_CONFIG_PROPERTY(password)
         _CSOCKS_OUT_CONFIG_PROPERTY(workerCount)
         _CSOCKS_OUT_CONFIG_PROPERTY(ioThreads)
         _CSOCKS_OUT_CONFIG_PROPERTY(stackSize)
@@ -161,6 +209,10 @@ void Config::load(boost::filesystem::path file)
         _CSOCKS_OUT_CONFIG_PROPERTY(dsSendTimeout)
         _CSOCKS_OUT_CONFIG_PROPERTY(usRecvTimeout)
         _CSOCKS_OUT_CONFIG_PROPERTY(usSendTimeout)
+        _CSOCKS_OUT_CONFIG_PROPERTY(drBufferSize)
+        _CSOCKS_OUT_CONFIG_PROPERTY(dwBufferSize)
+        _CSOCKS_OUT_CONFIG_PROPERTY(urBufferSize)
+        _CSOCKS_OUT_CONFIG_PROPERTY(uwBufferSize)
     );
 }
 
