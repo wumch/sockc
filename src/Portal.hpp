@@ -23,7 +23,9 @@ class Portal
 private:
     Bus bus;
     const Config* const config;
+#if _CSOCKS_IS_LINUX
     bool pidFileSelfCreated;
+#endif
 
 public:
     Portal():
@@ -38,13 +40,15 @@ public:
         bus.start();
     }
 
+#if _CSOCKS_IS_LINUX
     ~Portal()
     {
         rmPidFile();
     }
+#endif
 
-private:
 #if _CSOCKS_IS_LINUX
+private:
     void savePid()
     {
         if (boost::filesystem::exists(config->pidFile))
