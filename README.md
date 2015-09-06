@@ -17,12 +17,13 @@ and cmake (>=2.8)
 # installation
 $ git clone https://github.com/wumch/sockc.git sockc  
 $ mkdir sockc-build  
-$ cd sockc-build  
+$ cd !$  
 $ cmake ../sockc  
 $ make  
 
 # run
 $ cd sockc-build  
 $ cp -r ../sockc/etc ./  # then you can edit etc/sockc.conf before run.  
-$ sudo touch /var/run/sockc.pid && sudo chown ${USER}:$(id -gn) !$  
+$ sudo touch /var/run/sockc.pid  
+$ sudo chown ${USER}:$(id -gn) !$  
 $ ./sockc --help  
