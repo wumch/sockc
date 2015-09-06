@@ -17,7 +17,7 @@ public:
         data(NULL), capacity(0)
     {}
 
-    Buffer(std::size_t _size):
+    explicit Buffer(std::size_t _size):
         data(NULL), capacity(_size)
     {
         setCapacity(capacity);

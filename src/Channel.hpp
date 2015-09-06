@@ -101,7 +101,7 @@ private:
     Crypto crypto;
 
 public:
-    Channel(asio::io_service& _ioService):
+    explicit Channel(asio::io_service& _ioService):
         config(Config::instance()),
         ioService(_ioService),
         ds(ioService), us(ioService), dsu(ioService),

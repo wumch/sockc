@@ -19,6 +19,7 @@ add_executable(sockc ${SOURCE_FILES}
     src/Channel.hpp 
     src/Buffer.hpp 
     src/Crypto.hpp
+    src/Traits.hpp
 )
 
 link_directories(/usr/lib/x86_64-linux-gnu)
