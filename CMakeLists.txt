@@ -13,17 +13,12 @@ set(SOURCE_FILES src/main.cpp)
 add_executable(sockc ${SOURCE_FILES} 
     src/predef.hpp 
     src/main.cpp 
-    src/Portal.cpp 
     src/Portal.hpp 
     src/Config.cpp 
     src/Config.hpp  
-    src/Channel.cpp 
     src/Channel.hpp 
-    src/Authority.hpp 
-    src/Authenticater.hpp 
     src/Buffer.hpp 
     src/Crypto.hpp
-    src/Outlet.hpp
 )
 
 link_directories(/usr/lib/x86_64-linux-gnu)
