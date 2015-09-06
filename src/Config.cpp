@@ -4,10 +4,6 @@
 #include <string>
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/dynamic_bitset.hpp>
-#include <boost/tokenizer.hpp>
-#include <boost/lexical_cast.hpp>
-#include "stage/sys.hpp"
 
 #define _CSOCKS_OUT_CONFIG_PROPERTY(property)     << CS_OC_GREEN(#property) << ":\t\t" << CS_OC_RED(property) << std::endl
 
@@ -89,12 +85,12 @@ void Config::initDesc()
         ("pid-file", boost::program_options::value<boost::filesystem::path>()->default_value(defaultPidFile),
             ("pid file, default " + defaultPidFile.string() + ".").c_str())
 
-        ("stack-size", boost::program_options::value<std::size_t>()->default_value(stage::getRlimitCur(RLIMIT_STACK)),
-            "stack size limit (KB), default not set.")
+        ("stack-size", boost::program_options::value<std::size_t>()->default_value(0),
+            "stack size limit (KB), 0 means not set, default 0.")
 #endif
 
-        ("worker-count", boost::program_options::value<std::size_t>()->default_value(stage::getCpuNum() - 1),
-            "num of worker threads, default is num of CPUs minus 1.")
+        ("worker-count", boost::program_options::value<std::size_t>()->default_value(1),
+            "num of worker threads, default 1.")
 
         ("io-threads", boost::program_options::value<std::size_t>()->default_value(1),
             "num of io threads, default 1.")
@@ -109,16 +105,16 @@ void Config::initDesc()
             "listen backlog, default 1024.")
 
         ("downstream-receive-timeout", boost::program_options::value<std::time_t>()->default_value(30),
-            "timeout for receive from downstream (second), 0 stands for never timeout, default 30s.")
+            "timeout for receive from downstream (second), 0 means never timeout, default 30.")
 
         ("downstream-send-timeout", boost::program_options::value<std::time_t>()->default_value(30),
-            "timeout for send to downstream (second), 0 stands for never timeout, default 30s.")
+            "timeout for send to downstream (second), 0 means never timeout, default 30.")
 
         ("upstream-receive-timeout", boost::program_options::value<std::time_t>()->default_value(30),
-            "timeout for receive from uptream (second), 0 stands for never timeout, default 30s.")
+            "timeout for receive from uptream (second), 0 means never timeout, default 30.")
 
         ("upstream-send-timeout", boost::program_options::value<std::time_t>()->default_value(30),
-            "timeout for send to uptream (second), 0 stands for never timeout, default 30s.")
+            "timeout for send to uptream (second), 0 means never timeout, default 30.")
 
         ("downstream-read-buffer-size", boost::program_options::value<std::size_t>()->default_value(32),
             "size of read-buffer for downstream (KB), at least 1, default 32.")
@@ -136,13 +132,13 @@ void Config::initDesc()
             "socket linger on/off for downstream, default off.")
 
         ("downstream-linger-timeout", boost::program_options::value<int>()->default_value(3),
-            "socket linger timeout for downstream (second), default 3s.")
+            "socket linger timeout for downstream (second), default 3.")
 
         ("upstream-linger", boost::program_options::bool_switch()->default_value(false),
             "socket linger on/off for upstream, default off.")
 
         ("upstream-linger-timeout", boost::program_options::value<int>()->default_value(0),
-            "socket linger timeout for upstream (second), default 3s.")
+            "socket linger timeout for upstream (second), default 3.")
     ;
 }
 
