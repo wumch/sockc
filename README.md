@@ -5,7 +5,7 @@ A socks5 relay server, works as downstream of [csocks](https://github.com/wumch/
 Configuration options worker-count, io-threads are not currently supported.
 
 # requirement
-1. boost (>=1.47, boost-system, boost-filesystem, boost-program_options, boost-asio)  
+1. boost (>=1.42, boost-system, boost-filesystem, boost-program_options, boost-asio)  
 2. libcrypto++  
 3. [stage](https://github.com/wumch/stage)  
 and cmake (>=2.8)  
