@@ -11,7 +11,7 @@ Configuration options worker-count, io-threads are not currently supported.
 1. boost (>=1.42, boost-system, boost-filesystem, boost-program_options, boost-asio, boost-bind)  
 2. libcrypto++  
 3. [stage](https://github.com/wumch/stage)  
-4. Qt (>=5.5, with QtQuick2, QML)
+4. Qt (>=5.5, with QtQuick2, QML)  
 and cmake (>=2.8)  
 
 # installation
