@@ -73,8 +73,8 @@ void Config::initDesc()
 
         ("upstream-port", boost::program_options::value<uint16_t>()->default_value(443), "upstream port, default 443.")
 
-        ("username", boost::program_options::value<std::string>(), "username for authenticate to upstream")
-        ("password", boost::program_options::value<std::string>(), "password for authenticate to upstream")
+        ("username", boost::program_options::value<std::string>(), "username for authenticate to upstream.")
+        ("password", boost::program_options::value<std::string>(), "password for authenticate to upstream.")
 
         ("reuse-address", boost::program_options::bool_switch()->default_value(true),
             "whether reuse-address on startup or not, default on.")
