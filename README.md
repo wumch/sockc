@@ -5,7 +5,7 @@ A socks5 relay server, works as downstream of [csocks](https://github.com/wumch/
 Configuration options worker-count, io-threads are not currently supported.
 
 # installation
-git clone git@github.com:wumch/sockc.git sockc  
+git clone https://github.com/wumch/sockc.git sockc  
 mkdir sockc-build  
 cd sockc-build  
 cmake ../sockc  
