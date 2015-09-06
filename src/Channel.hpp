@@ -28,9 +28,9 @@ using asio::ip::udp;
 
 #define SINGLE_BYTE __attribute__((aligned(1), packed))
 
-#define KICK_IF(err) if (CS_UNLIKELY(err)) { CS_SAY("will return"); return; }
+#define KICK_IF(err) if (CS_UNLIKELY(err)) { CS_SAY("[" << (uint64_t)this << "] will return"); return; }
 
-#define FALSE_IF(err) if (CS_UNLIKELY(ec)) { CS_SAY("will return false."); return false; }
+#define FALSE_IF(err) if (CS_UNLIKELY(ec)) { CS_SAY("[" << (uint64_t)this << "] will return false."); return false; }
 
 namespace csocks
 {
@@ -171,7 +171,7 @@ private:
     {
         CS_DUMP(bytesRead);
         KICK_IF(err)
-        KICK_IF(bytesRead != 2)
+        KICK_IF(bytesRead != 2);
 
         const char* const header = bufdr.data;
         dsVersion = header[0];
@@ -260,23 +260,18 @@ private:
 
         uint8_t key[CryptoPP::AES::DEFAULT_KEYLENGTH];
         uint8_t iv[CryptoPP::AES::BLOCKSIZE];
-        std::memset(key, 'a', 16);
-        std::memset(iv, 'b', 16);
         {
-//            CryptoPP::AutoSeededRandomPool rnd;
-//            rnd.GenerateBlock(key, sizeof(key));
-//            rnd.GenerateBlock(iv, sizeof(iv));
+            CryptoPP::AutoSeededRandomPool rnd;
+            rnd.GenerateBlock(key, sizeof(key));
+            rnd.GenerateBlock(iv, sizeof(iv));
             crypto.setDecKeyWithIv(key, sizeof(key), iv, sizeof(iv));
             crypto.setEncKeyWithIv(key, sizeof(key), iv, sizeof(iv));
             crypto.encrypt(data, sizeof(data), bufuw.data);
-            CS_DUMP((int)bufuw.data[0]);
-            CS_DUMP((int)bufuw.data[1]);
         }
         std::memcpy(bufuw.data + sizeof(data), key, sizeof(key));
         std::memcpy(bufuw.data + (sizeof(data) + sizeof(key)), iv, sizeof(iv));
         uint8_t methods[1] = {AUTH_USERPASS};
         crypto.encrypt(methods, sizeof(methods), bufuw.data + (sizeof(data) + sizeof(key) + sizeof(iv)));
-        CS_SAY("bufuw preapred");
 
         const int len = sizeof(data) + sizeof(key) + sizeof(iv) + sizeof(methods);
         CS_DUMP(len);
@@ -352,13 +347,13 @@ private:
         {
             // write to downstream with {methods:0}:
             //  +----+----------+
-            //  |VER | METHODS  |
+            //  |VER |  METHOD  |
             //  +----+----------+
             //  | 1  |    1     |
             //  +----+----------+
             //  [               ]
-            bufdw.data[0] = PROTOCOL_VERSION;
-            bufdw.data[2] = AUTH_NONE;
+            bufdw.data[0] = dsVersion;
+            bufdw.data[1] = AUTH_NONE;
             asio::async_write(ds, asio::buffer(bufdw.data, 2), asio::transfer_exactly(2),
                 boost::bind(&Channel::handleAuthedSent, shared_from_this(),
                     asio::placeholders::error, asio::placeholders::bytes_transferred));
@@ -370,7 +365,6 @@ private:
     {
         CS_SAY("pingpong");
         KICK_IF(err);
-        CS_DUMP(bytesSent);
 
         ds.async_read_some(asio::buffer(bufdr.data, bufdr.capacity),
             boost::bind(&Channel::handleDsRead, shared_from_this(),
@@ -384,12 +378,12 @@ private:
     void handleDsRead(const boost::system::error_code& err, std::size_t bytesRead)
     {
         CS_DUMP(bytesRead);
-        KICK_IF(err)
+        KICK_IF(err);
 
         crypto.encrypt(bufdr.data, bytesRead, bufuw.data);
         asio::async_write(us, asio::buffer(bufuw.data, bytesRead),
             asio::transfer_exactly(bytesRead),
-            boost::bind(&Channel::handleDrSent, shared_from_this(),
+            boost::bind(&Channel::handleDsWritten, shared_from_this(),
                 asio::placeholders::error, asio::placeholders::bytes_transferred));
     }
 
@@ -401,13 +395,13 @@ private:
         crypto.decrypt(bufur.data, bytesRead, bufdw.data);
         asio::async_write(ds, asio::buffer(bufdw.data, bytesRead),
             asio::transfer_exactly(bytesRead),
-            boost::bind(&Channel::handleUrSent, shared_from_this(),
+            boost::bind(&Channel::handleUsWritten, shared_from_this(),
                 asio::placeholders::error, asio::placeholders::bytes_transferred));
     }
 
-    void handleDrSent(const boost::system::error_code& err, std::size_t bytesRead)
+    void handleDsWritten(const boost::system::error_code& err, std::size_t bytesSent)
     {
-        CS_DUMP(bytesRead);
+        CS_DUMP(bytesSent);
         KICK_IF(err)
 
         ds.async_read_some(asio::buffer(bufdr.data, bufdr.capacity),
@@ -415,9 +409,9 @@ private:
                 asio::placeholders::error, asio::placeholders::bytes_transferred));
     }
 
-    void handleUrSent(const boost::system::error_code& err, std::size_t bytesRead)
+    void handleUsWritten(const boost::system::error_code& err, std::size_t bytesSent)
     {
-        CS_DUMP(bytesRead);
+        CS_DUMP(bytesSent);
         KICK_IF(err)
 
         us.async_read_some(asio::buffer(bufur.data, bufur.capacity),
@@ -490,7 +484,7 @@ private:
         }
         else // if (dsVersion == PROTOCOL_V4)
         {
-            // socks4 连接失败
+            // socks4 connect failed
             //  +----+----+----+----+----+----+----+----+
             //  | VN | CD | DSTPORT |      DSTIP        |
             //  +----+----+----+----+----+----+----+----+
