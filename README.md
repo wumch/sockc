@@ -25,4 +25,4 @@ $ make
 $ cd sockc-build  
 $ cp -r ../sockc/etc ./  # then you can edit etc/sockc.conf before run.  
 $ sudo touch /var/run/sockc.pid && sudo chown ${USER}:$(id -gn) !$  
-$ ./sockc -h  
+$ ./sockc --help  
