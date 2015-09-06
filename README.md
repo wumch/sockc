@@ -1,6 +1,7 @@
 # sockc
 
-A socks5 relay server, works as downstream of [csocks](https://github.com/wumch/csocks).
+A socks4/5 relay server, works as downstream of [csocks](https://github.com/wumch/csocks).  
+NOTE: Not fully compatible with the standard [SOCKS5](http://www.ietf.org/rfc/rfc1928.txt) protocol.
 
 Configuration options worker-count, io-threads are not currently supported.
 
