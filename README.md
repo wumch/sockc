@@ -19,6 +19,6 @@ $ make
 
 # run
 $ cd sockc-build  
-$ cp -r ../sockc/etc ./  
-$sudo touch /var/run/sockc.pid && sudo chown ${USER}:$(id -gn) !$  
+$ cp -r ../sockc/etc ./  # then you can edit etc/sockc.conf before run. 
+$ sudo touch /var/run/sockc.pid && sudo chown ${USER}:$(id -gn) !$  
 $ ./sockc -h  
