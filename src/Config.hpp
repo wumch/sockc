@@ -7,6 +7,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/thread/mutex.hpp>
+#include "Traits.hpp"
 
 extern int main(int, char*[]);
 
@@ -44,7 +45,7 @@ public:
     std::string programName;
     std::size_t workerCount;
     std::size_t ioThreads;
-#ifdef __linux__
+#if _CSOCKS_IS_LINUX
     boost::filesystem::path pidFile;
     std::size_t stackSize;
 #endif
@@ -63,11 +64,14 @@ public:
 
     std::string username, password;
 
-    std::time_t dsRecvTimeout, dsSendTimeout,
+    Traits::SocketTimeoutVal dsRecvTimeout, dsSendTimeout,
         usRecvTimeout, usSendTimeout;
 
     std::size_t drBufferSize, dwBufferSize,
         urBufferSize, uwBufferSize;
+
+    bool dsLinger, usLinger;
+    int dsLingerTimeout, usLingerTimeout;
 
     bool multiThreads, multiIoThreads;
     mutable boost::mutex workMutex, ioMutex;
@@ -75,6 +79,18 @@ public:
 
     boost::program_options::variables_map options;
     boost::program_options::options_description desc;
+
+private:    // handy utility
+    Traits::SocketTimeoutVal toTimeval(std::time_t val) const
+    {
+#if _CSOCKS_IS_POSIX
+        Traits::SocketTimeoutVal tval = {val, 0};
+        return tval;
+#elif _CSOCKS_IS_WINDOWS
+        return val;
+#endif
+    }
+
 };
 
 }

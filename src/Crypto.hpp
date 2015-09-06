@@ -58,8 +58,6 @@ public:
     void setEncKeyWithIv(const byte* _key, std::size_t keyLen,
         const byte* _iv, std::size_t ivLen)
     {
-        CS_DUMP(std::string((char*)_key, keyLen));
-        CS_DUMP(std::string((char*)_iv, ivLen));
         encor.SetKeyWithIV(_key, keyLen, _iv, ivLen);
     }
 
@@ -73,8 +71,6 @@ public:
     void setDecKeyWithIv(const byte* _key, std::size_t keyLen,
         const byte* _iv, std::size_t ivLen)
     {
-        CS_DUMP(std::string((char*)_key, keyLen));
-        CS_DUMP(std::string((char*)_iv, ivLen));
         decor.SetKeyWithIV(_key, keyLen, _iv, ivLen);
     }
 };

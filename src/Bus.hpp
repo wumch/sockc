@@ -7,8 +7,6 @@
 #include <boost/shared_ptr.hpp>
 #include "Config.hpp"
 #include "Channel.hpp"
-#include "Outlet.hpp"
-#include "Authenticater.hpp"
 
 namespace csocks
 {
@@ -17,13 +15,9 @@ class Bus:
     public boost::noncopyable
 {
 private:
-    UserOutletMap users;
-
     const Config* const config;
     boost::asio::io_service ioService;
     tcp::acceptor acceptor;
-
-    Authenticater authenticater;
 
 public:
     Bus():
@@ -41,7 +35,7 @@ public:
 private:
     void startAccept()
     {
-        boost::shared_ptr<Channel> channel(new Channel(users, ioService, authenticater));
+        boost::shared_ptr<Channel> channel(new Channel(ioService));
         acceptor.async_accept(channel->downstream(),
             boost::bind(&Bus::handleAccept, this, asio::placeholders::error, channel));
     }

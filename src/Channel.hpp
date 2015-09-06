@@ -2,10 +2,7 @@
 #pragma once
 
 #include "predef.hpp"
-#include <netinet/in.h>
-#include <cstring>      // for memcpy
-#include <vector>
-#include <string>
+#include <cstring>      // for std::memcpy
 #include <utility>
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -16,11 +13,9 @@
 #include <boost/thread/mutex.hpp>
 #include <cryptopp/osrng.h>
 #include "stage/backtrace.hpp"
-#include "Authenticater.hpp"
 #include "Config.hpp"
 #include "Crypto.hpp"
 #include "Buffer.hpp"
-#include "Outlet.hpp"
 
 namespace asio = boost::asio;
 using asio::ip::tcp;
@@ -28,9 +23,11 @@ using asio::ip::udp;
 
 #define SINGLE_BYTE __attribute__((aligned(1), packed))
 
-#define KICK_IF(err) if (CS_UNLIKELY(err)) { CS_SAY("[" << (uint64_t)this << "] will return"); return; }
+#define KICK_IF(cond) if (CS_UNLIKELY(cond)) { CS_SAY("[" << (uint64_t)this << "] will return"); return; }
 
-#define FALSE_IF(err) if (CS_UNLIKELY(ec)) { CS_SAY("[" << (uint64_t)this << "] will return false."); return false; }
+#define KICK_IF_ERR(err) if (CS_UNLIKELY(err)) { CS_SAY("[" << (uint64_t)this << "]: [" << CS_OC_RED(err.message()) << "]"); return; }
+
+#define FALSE_IF(err) if (CS_UNLIKELY(err)) { CS_SAY("[" << (uint64_t)this << "] will return false."); return false; }
 
 namespace csocks
 {
@@ -43,12 +40,8 @@ private:
         PROTOCOL_V4 = 0x04,
         PROTOCOL_V5 = 0x05,
         PROTOCOL_VERSION = PROTOCOL_V5,
+        PROTOCOL_INVALID = 0x00,
     };
-    enum {
-        CMD_CONNECT     = 0x01,
-        CMD_BIND        = 0x02,
-        CMD_UDP_ASSOC   = 0x03,
-    } SINGLE_BYTE;
 
     // 认证方法
     enum {
@@ -96,40 +89,26 @@ private:
         SOCKS4_REQUEST_REJECTED_USER_NO_ALLOW,
     } SINGLE_BYTE;
 
-    // 认证方法 最大数量
-    static const int maxNumMethods = 8;
-
     const Config* const config;
 
-    UserOutletMap& users;
-
     asio::io_service& ioService;
-    tcp::resolver resolver;
 
     tcp::socket ds, us;
     udp::socket dsu;
     Buffer bufdr, bufdw, bufur, bufuw;
-    uint8_t dsVersion;  // 客户端协议版本
+    uint8_t dsVersion;  // protocol version of downstream.
 
     Crypto crypto;
-    Authenticater& authenticater;
-    Authority* authority;
 
 public:
-    Channel(UserOutletMap& _users, asio::io_service& _ioService, Authenticater& _authenticater):
-        config(Config::instance()), users(_users),
-        ioService(_ioService), resolver(ioService),
+    Channel(asio::io_service& _ioService):
+        config(Config::instance()),
+        ioService(_ioService),
         ds(ioService), us(ioService), dsu(ioService),
         bufdr(config->drBufferSize), bufdw(config->dwBufferSize),
         bufur(config->urBufferSize), bufuw(config->uwBufferSize),
-        dsVersion(0),
-        authenticater(_authenticater), authority(NULL)
-    {
-        setsockopt(ds.native(), SOL_SOCKET, SO_RCVTIMEO, &config->dsRecvTimeout, sizeof(config->dsRecvTimeout));
-        setsockopt(ds.native(), SOL_SOCKET, SO_SNDTIMEO, &config->dsSendTimeout, sizeof(config->dsSendTimeout));
-        setsockopt(us.native(), SOL_SOCKET, SO_RCVTIMEO, &config->usRecvTimeout, sizeof(config->usRecvTimeout));
-        setsockopt(us.native(), SOL_SOCKET, SO_SNDTIMEO, &config->usSendTimeout, sizeof(config->usSendTimeout));
-    }
+        dsVersion(PROTOCOL_INVALID)
+    {}
 
     tcp::socket& downstream()
     {
@@ -170,15 +149,14 @@ private:
     void handleDsNumMethodsRead(const boost::system::error_code& err, int bytesRead)
     {
         CS_DUMP(bytesRead);
-        KICK_IF(err)
+        KICK_IF_ERR(err)
         KICK_IF(bytesRead != 2);
 
         const char* const header = bufdr.data;
         dsVersion = header[0];
         CS_DUMP((int)dsVersion);
-        CS_DUMP((int)header[1]);
+        CS_SAY("num-auth-methods: " << (int)header[1]);
         KICK_IF(dsVersion != PROTOCOL_V5 && dsVersion != PROTOCOL_V4);
-        KICK_IF(maxNumMethods < header[1]);
 
         if (header[1])
         {
@@ -203,7 +181,7 @@ private:
     void handleMethods(int numMethods, const boost::system::error_code& err, int bytesRead)
     {
         CS_DUMP(numMethods);
-        KICK_IF(err)
+        KICK_IF_ERR(err)
         KICK_IF(bytesRead != numMethods)
 
         const char* const methods = bufdr.data;
@@ -245,8 +223,13 @@ private:
     // after upstream connected
     void handleUsConnected(const boost::system::error_code& err)
     {
+        if (CS_UNLIKELY(err))
+        {
+            dealConnectFailed(err);
+            CS_SAY("failed on connect to upstream: [" << err.message() << "]");
+            return;
+        }
         CS_SAY("upstream connected");
-        KICK_IF(err);
         KICK_IF(!prepareUs());
 
         // write to upstream:
@@ -284,7 +267,7 @@ private:
     void handleMethodSent(const boost::system::error_code& err, int bytesSent)
     {
         CS_SAY("method sent");
-        KICK_IF(err);
+        KICK_IF_ERR(err);
 
         asio::async_read(us, asio::buffer(bufur.data, 2), asio::transfer_exactly(2),
             boost::bind(&Channel::handleMethodDesignated, shared_from_this(),
@@ -295,7 +278,7 @@ private:
     void handleMethodDesignated(const boost::system::error_code& err, int bytesRead)
     {
         CS_SAY("received designated method from upstream");
-        KICK_IF(err);
+        KICK_IF_ERR(err);
 
         char data[2];
         crypto.decrypt(bufur.data, 2, data);
@@ -329,7 +312,7 @@ private:
     void handleUserPassSent(const boost::system::error_code& err, int bytesSent)
     {
         CS_SAY("username/password sent");
-        KICK_IF(err);
+        KICK_IF_ERR(err);
         asio::async_read(us, asio::buffer(bufur.data, 2), asio::transfer_exactly(2),
             boost::bind(&Channel::handleAuthed, shared_from_this(),
                 asio::placeholders::error, asio::placeholders::bytes_transferred));
@@ -338,7 +321,7 @@ private:
     void handleAuthed(const boost::system::error_code& err, int bytesRead)
     {
         CS_SAY("authed");
-        KICK_IF(err);
+        KICK_IF_ERR(err);
 
         char data[2];
         crypto.decrypt(bufur.data, 2, data);
@@ -364,7 +347,7 @@ private:
     void handleAuthedSent(const boost::system::error_code& err, std::size_t bytesSent)
     {
         CS_SAY("pingpong");
-        KICK_IF(err);
+        KICK_IF_ERR(err);
 
         ds.async_read_some(asio::buffer(bufdr.data, bufdr.capacity),
             boost::bind(&Channel::handleDsRead, shared_from_this(),
@@ -378,7 +361,7 @@ private:
     void handleDsRead(const boost::system::error_code& err, std::size_t bytesRead)
     {
         CS_DUMP(bytesRead);
-        KICK_IF(err);
+        KICK_IF_ERR(err);
 
         crypto.encrypt(bufdr.data, bytesRead, bufuw.data);
         asio::async_write(us, asio::buffer(bufuw.data, bytesRead),
@@ -390,7 +373,7 @@ private:
     void handleUsRead(const boost::system::error_code& err, std::size_t bytesRead)
     {
         CS_DUMP(bytesRead);
-        KICK_IF(err)
+        KICK_IF_ERR(err);
 
         crypto.decrypt(bufur.data, bytesRead, bufdw.data);
         asio::async_write(ds, asio::buffer(bufdw.data, bytesRead),
@@ -402,7 +385,7 @@ private:
     void handleDsWritten(const boost::system::error_code& err, std::size_t bytesSent)
     {
         CS_DUMP(bytesSent);
-        KICK_IF(err)
+        KICK_IF_ERR(err)
 
         ds.async_read_some(asio::buffer(bufdr.data, bufdr.capacity),
             boost::bind(&Channel::handleDsRead, shared_from_this(),
@@ -412,7 +395,7 @@ private:
     void handleUsWritten(const boost::system::error_code& err, std::size_t bytesSent)
     {
         CS_DUMP(bytesSent);
-        KICK_IF(err)
+        KICK_IF_ERR(err);
 
         us.async_read_some(asio::buffer(bufur.data, bufur.capacity),
             boost::bind(&Channel::handleUsRead, shared_from_this(),
@@ -420,16 +403,6 @@ private:
     }
 
 private:
-    void buildStage()
-    {
-        authority->drBufSize = authority->dwBufSize =
-            authority->urBufSize = authority->uwBufSize = 32 << 10;
-        bufdr.setCapacity(authority->drBufSize);
-        bufdw.setCapacity(authority->dwBufSize);
-        bufur.setCapacity(authority->urBufSize);
-        bufuw.setCapacity(authority->uwBufSize);
-    }
-
     uint8_t getSocksConnectErrcode(int asioErrcode) __attribute__((const))
     {
         if (CS_BLIKELY(dsVersion == PROTOCOL_V5))
@@ -522,42 +495,13 @@ private:
         {
             dsu.close();
         }
-        authenticater.restore(*authority);
-    }
-
-    void addToOutlet(const std::string& username)
-    {
-        // TODO: lock
-        if (config->multiThreads)
-        {
-            boost::mutex::scoped_lock lock(config->workMutex);
-            _addToOutlet(username);
-        }
-        else
-        {
-            _addToOutlet(username);
-        }
-
-    }
-
-    void _addToOutlet(const std::string& username)
-    {
-        UserOutletMap::iterator it = users.find(username);
-        if (it == users.end())
-        {
-            Outlet outlet(authority);
-            users.insert(std::make_pair(username, outlet));
-//            users[username] = outlet;
-            outlet.channels.push_back(this);
-        }
-        else
-        {
-            it->second.channels.push_back(this);
-        }
     }
 
     bool prepareDs()
     {
+        FALSE_IF((0 != setsockopt(ds.native(), SOL_SOCKET, SO_RCVTIMEO, &config->dsRecvTimeout, sizeof(config->dsRecvTimeout))));
+        FALSE_IF((0 != setsockopt(ds.native(), SOL_SOCKET, SO_SNDTIMEO, &config->dsSendTimeout, sizeof(config->dsSendTimeout))));
+
         boost::system::error_code ec;
         {
             asio::socket_base::receive_buffer_size option(config->drBufferSize);
@@ -566,6 +510,11 @@ private:
         }
         {
             asio::socket_base::send_buffer_size option(config->dwBufferSize);
+            ds.set_option(option, ec);
+            FALSE_IF(ec);
+        }
+        {
+            asio::socket_base::linger option(config->dsLinger, config->dsLingerTimeout);
             ds.set_option(option, ec);
             FALSE_IF(ec);
         }
@@ -580,6 +529,9 @@ private:
 
     bool prepareUs()
     {
+        FALSE_IF((0 != setsockopt(us.native(), SOL_SOCKET, SO_RCVTIMEO, &config->usRecvTimeout, sizeof(config->usRecvTimeout))));
+        FALSE_IF((0 != setsockopt(us.native(), SOL_SOCKET, SO_SNDTIMEO, &config->usSendTimeout, sizeof(config->usSendTimeout))));
+
         boost::system::error_code ec;
         {
             asio::socket_base::receive_buffer_size option(config->urBufferSize);
@@ -588,6 +540,11 @@ private:
         }
         {
             asio::socket_base::send_buffer_size option(config->uwBufferSize);
+            us.set_option(option, ec);
+            FALSE_IF(ec);
+        }
+        {
+            asio::socket_base::linger option(config->usLinger, config->usLingerTimeout);
             us.set_option(option, ec);
             FALSE_IF(ec);
         }
@@ -605,7 +562,6 @@ private:
 }
 
 #undef KICK_IF
-
+#undef KICK_IF_ERR
 #undef FALSE_IF
-
 #undef SINGLE_BYTE
