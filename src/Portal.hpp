@@ -7,8 +7,10 @@ extern "C" {
 #   include <unistd.h>
 }
 #endif
+#include <cstdlib>
 #include <exception>
 #include <fstream>
+#include <iostream>
 #include <boost/filesystem.hpp>
 #include "Config.hpp"
 #include "Bus.hpp"
@@ -31,6 +33,12 @@ public:
     Portal():
         config(Config::instance()), pidFileSelfCreated(false)
     {}
+
+    static void initialize(int argc, char* argv[])
+    {
+        Config::mutableInstance()->init(argc, argv);
+        Buffer::pool.initPools(Config::instance());
+    }
 
     void run()
     {
@@ -68,7 +76,7 @@ private:
             }
             catch (const std::exception& e)
             {
-                CS_DIE(e.what());
+                CS_DIE("failed on create directory [" << dir << "]: " << CS_OC_RED(e.what()));
             }
         }
 

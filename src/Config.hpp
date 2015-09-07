@@ -9,14 +9,14 @@
 #include <boost/thread/mutex.hpp>
 #include "Traits.hpp"
 
-extern int main(int, char*[]);
+class Portal;
 
 namespace csocks
 {
 
 class Config
 {
-    friend int ::main(int, char*[]);
+    friend class Portal;
 private:
     static Config _instance;
 
@@ -69,6 +69,7 @@ public:
 
     std::size_t drBufferSize, dwBufferSize,
         urBufferSize, uwBufferSize;
+    std::size_t initReserveBuffers;
 
     bool dsLinger, usLinger;
     int dsLingerTimeout, usLingerTimeout;

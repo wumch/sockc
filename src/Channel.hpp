@@ -23,11 +23,11 @@ using asio::ip::udp;
 
 #define SINGLE_BYTE __attribute__((aligned(1), packed))
 
-#define KICK_IF(cond) if (CS_UNLIKELY(cond)) { CS_SAY("[" << (uint64_t)this << "] will return"); return; }
+#define KICK_IF(cond) if (CS_UNLIKELY(cond)) { CS_SAY("[" << (uint64_t)this << "] will return"); shutdown(); return; }
 
-#define KICK_IF_ERR(err) if (CS_UNLIKELY(err)) { CS_SAY("[" << (uint64_t)this << "]: [" << CS_OC_RED(err.message()) << "]"); return; }
+#define KICK_IF_ERR(err) if (CS_UNLIKELY(err)) { CS_SAY("[" << (uint64_t)this << "]: [" << CS_OC_RED(err.message()) << "]"); shutdown(); return; }
 
-#define FALSE_IF(err) if (CS_UNLIKELY(err)) { CS_SAY("[" << (uint64_t)this << "] will return false."); return false; }
+#define FALSE_IF(err) if (CS_UNLIKELY(err)) { CS_SAY("[" << (uint64_t)this << "] will return false."); shutdown(); return false; }
 
 namespace csocks
 {
@@ -344,6 +344,12 @@ private:
         // otherwise shutdown automatically.
     }
 
+    /**
+     * TODO:
+     * DOWNSTREAM <=== down-connection ===> SELF <=== up-connection ===> UPSTREAM
+     * when up-connection gracefully disconnected, should also disconnect down-connection.
+     */
+
     void handleAuthedSent(const boost::system::error_code& err, std::size_t bytesSent)
     {
         CS_SAY("pingpong");
@@ -403,7 +409,7 @@ private:
     }
 
 private:
-    uint8_t getSocksConnectErrcode(int asioErrcode) __attribute__((const))
+    uint8_t getSocksConnectErrcode(int asioErrcode) CS_ATTR_CONST
     {
         if (CS_BLIKELY(dsVersion == PROTOCOL_V5))
         {

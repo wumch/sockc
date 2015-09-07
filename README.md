@@ -8,7 +8,7 @@ Linux, Windows are supported, OSX, iOS, Android, OpenWRT support are still in pr
 Configuration options worker-count, io-threads are not currently supported.  
 
 # requirement
-* boost (>=1.42, boost-system, boost-filesystem, boost-program_options, boost-asio, boost-bind)  
+* boost (>=1.42, boost-system, boost-filesystem, boost-program_options, boost-asio, boost-bind, boost-pool)  
 * libcrypto++  
 * [stage](https://github.com/wumch/stage)  
 * Qt (>=5.5, with QtQuick2, QML)  

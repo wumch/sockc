@@ -12,14 +12,17 @@ include_directories( "../stage/ccpp" )
 set(SOURCE_FILES src/main.cpp)
 add_executable(sockc ${SOURCE_FILES} 
     src/predef.hpp 
-    src/main.cpp 
-    src/Portal.hpp 
+    src/Traits.hpp
     src/Config.cpp 
     src/Config.hpp  
-    src/Channel.hpp 
     src/Buffer.hpp 
+    src/Buffer.cpp 
+    src/Pool.hpp 
     src/Crypto.hpp
-    src/Traits.hpp
+    src/Channel.hpp 
+    src/Bus.hpp 
+    src/Portal.hpp 
+    src/main.cpp 
 )
 
 link_directories(/usr/lib/x86_64-linux-gnu)

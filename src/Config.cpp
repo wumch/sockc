@@ -9,6 +9,7 @@
 
 namespace csocks
 {
+
 void Config::init(int argc, char* argv[])
 {
     boost::filesystem::path programPath = argv[0];
@@ -128,6 +129,9 @@ void Config::initDesc()
         ("upstream-write-buffer-size", boost::program_options::value<std::size_t>()->default_value(32),
             "size of write-buffer for upstream (KB), at least 1, default 32.")
 
+        ("initialize-reserve-buffers-num", boost::program_options::value<std::size_t>()->default_value(32),
+            "num of every kind of buffers should reserve while startup, at least 1, default 32.")
+
         ("downstream-linger", boost::program_options::bool_switch()->default_value(true),
             "socket linger on/off for downstream, default off.")
 
@@ -186,6 +190,7 @@ void Config::load(boost::filesystem::path file)
     dwBufferSize = options["downstream-write-buffer-size"].as<std::size_t>() << 10;
     urBufferSize = options["upstream-read-buffer-size"].as<std::size_t>() << 10;
     uwBufferSize = options["upstream-write-buffer-size"].as<std::size_t>() << 10;
+    initReserveBuffers = options["initialize-reserve-buffers-num"].as<std::size_t>();
 
     dsLinger = options["downstream-linger"].as<bool>();
     dsLingerTimeout = options["downstream-linger-timeout"].as<int>();
@@ -228,6 +233,7 @@ void Config::load(boost::filesystem::path file)
         _CSOCKS_OUT_CONFIG_PROPERTY(dwBufferSize)
         _CSOCKS_OUT_CONFIG_PROPERTY(urBufferSize)
         _CSOCKS_OUT_CONFIG_PROPERTY(uwBufferSize)
+        _CSOCKS_OUT_CONFIG_PROPERTY(initReserveBuffers)
         _CSOCKS_OUT_CONFIG_PROPERTY(dsLinger)
         _CSOCKS_OUT_CONFIG_PROPERTY(dsLingerTimeout)
         _CSOCKS_OUT_CONFIG_PROPERTY(usLinger)

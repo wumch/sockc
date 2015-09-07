@@ -2,41 +2,28 @@
 #pragma once
 
 #include "predef.hpp"
-#include <memory>
+#include "Config.hpp"
+#include "Pool.hpp"
+
 
 namespace csocks
 {
 
+class Portal;
+
 class Buffer
 {
-public:
-    char* data;
-    std::size_t capacity;
+    friend class Portal;
+private:
+    static Pool pool;
 
-    Buffer():
-        data(NULL), capacity(0)
-    {}
+public:
+    std::size_t capacity;
+    char* data;
 
     explicit Buffer(std::size_t _size):
-        data(NULL), capacity(_size)
-    {
-        setCapacity(capacity);
-    }
-
-    void setCapacity(std::size_t _capacity)
-    {
-        if (data != NULL)
-        {
-            delete data;
-        }
-        capacity = _capacity;
-        data = new char[capacity];
-    }
-
-    ~Buffer()
-    {
-        delete data;
-    }
+        capacity(_size), data(pool.malloc(capacity))
+    {}
 };
 
 }
