@@ -1,0 +1,16 @@
+Sockc Client	穿云箭
+SOCKS5 Proxy	加密网络代理
+Username	账号
+Remember	记住
+Password	密码
+Server	服务器
+Automate	自动
+Refresh	刷新
+Automatically start when system start	开机自动运行
+Start	启动代理
+Exit	退出
+Hide	后台运行
+Register	免费注册
+Retrieve password	找回密11码
+Renew	续费
+Note	提示

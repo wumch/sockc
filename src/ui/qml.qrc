@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>MainForm.ui.qml</file>
+        <file>LargeTextField.qml</file>
+        <file>LabelText.qml</file>
+        <file>main.cpp</file>
+        <file>LayoutRow.qml</file>
+        <file>aside.js</file>
+        <file>AssistCheckBox.qml</file>
+        <file>TextLink.qml</file>
+        <file>ServerModel.qml</file>
+        <file>Interact.cpp</file>
+        <file>Interact.hpp</file>
+    </qresource>
+    <qresource lang="zh" prefix="/">
+        <file>i18n/zh_CN.qm</file>
+    </qresource>
+</RCC>
