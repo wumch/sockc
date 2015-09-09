@@ -1,10 +1,9 @@
 
-INCLUDEPATH += $$_PROFILE_PWD_/../stage/ccpp
+INCLUDEPATH += $$_PRO_FILE_PWD_/../stage/ccpp
 DEPENDPATH += $$_PRO_FILE_PWD_/../stage/ccpp
 
-LIBS += -lboost_system -lboost_filesystem -lboost_program_options.so \
+LIBS += -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread \
     -lssl -lcrypto++ -lcrypto
 
-SOURCES += main.cpp Config.cpp Buffer.cpp
+SOURCES += Config.cpp Buffer.cpp
 HEADERS += Buffer.hpp  Bus.hpp  Channel.hpp  Config.hpp  Crypto.hpp  Pool.hpp  Portal.hpp  predef.hpp  Traits.hpp
-
