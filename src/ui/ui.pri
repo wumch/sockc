@@ -2,8 +2,7 @@ TEMPLATE = app
 
 QT += qml quick widgets
 
-SOURCES += main.cpp \
-    Interact.cpp
+SOURCES += main.cpp Interact.cpp
 
 RESOURCES += qml.qrc
 
@@ -16,5 +15,4 @@ TRANSLATIONS += ts/zh_CN.ts
 # Default rules for deployment.
 include(deployment.pri)
 
-HEADERS += \
-    Interact.hpp
+HEADERS += Interact.hpp
