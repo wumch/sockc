@@ -3,13 +3,23 @@
 
 #include "stage/meta.hpp"
 
-#define _CSOCKS_LINUX       1
-#define _CSOCKS_WINDOWS_PC  2
-#define _CSOCKS_OSX         3
+#define _CSOCKS_POSIX       1
+#define _CSOCKS_WIN         2
+#define _CSOCKS_EMBED       3
 
-#define _CSOCKS_ANDROID         11
-#define _CSOCKS_WINDOWS_PHONE   12
-#define _CSOCKS_IOS             13
+#define _CSOCKS_LINUX       11
+#define _CSOCKS_WINDOWS_PC  12
+#define _CSOCKS_OSX         13
+
+#define _CSOCKS_ANDROID         101
+#define _CSOCKS_WINDOWS_PHONE   102
+#define _CSOCKS_IOS             103
+
+// follows are in planning:
+#define _CSOCKS_OPENWRT         201
+#define _CSOCKS_DDWRT           202
+#define _CSOCKS_COMWARE         203
+#define _CSOCKS_CISCO_IOS       204
 
 #ifdef __linux__
 #   define _CSOCKS_PLATFORM _CSOCKS_LINUX

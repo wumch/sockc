@@ -4,7 +4,6 @@
         <file>MainForm.ui.qml</file>
         <file>LargeTextField.qml</file>
         <file>LabelText.qml</file>
-        <file>main.cpp</file>
         <file>LayoutRow.qml</file>
         <file>aside.js</file>
         <file>AssistCheckBox.qml</file>

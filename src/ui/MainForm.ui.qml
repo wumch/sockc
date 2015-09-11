@@ -52,7 +52,7 @@ Item {
                 font.capitalization: Font.Capitalize
                 fontSizeMode: Text.VerticalFit
                 font.pointSize: 20
-                font.weight: Font.Black
+                font.weight: Font.bold
                 font.letterSpacing: font.pixelSize / 4
 
                 color: "green"
@@ -91,7 +91,7 @@ Item {
                 id: password
                 placeholderText: qsTr("Password")
                 echoMode: TextInput.Password
-                inputMethodHints: Qt.ImhHiddenText & Qt.ImhPreferLowercase
+                inputMethodHints: Qt.ImhHiddenText & Qt.ImhLatinOnly & Qt.ImhPreferLowercase
                 maximumLength: 32
                 validator: RegExpValidator { regExp: /^\S{5,32}$/ }
             }
