@@ -2,7 +2,7 @@ TEMPLATE = app
 
 QT += qml quick widgets
 
-SOURCES += Interact.cpp
+SOURCES += Interact.cpp main.cpp
 
 RESOURCES += qml.qrc
 

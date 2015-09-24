@@ -12,7 +12,6 @@
 #include <boost/bind.hpp>
 #include <boost/thread/mutex.hpp>
 #include <cryptopp/osrng.h>
-#include "stage/backtrace.hpp"
 #include "Config.hpp"
 #include "Crypto.hpp"
 #include "Buffer.hpp"

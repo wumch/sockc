@@ -10,8 +10,6 @@
 #include <iostream>
 #include "Interact.hpp"
 
-namespace csocks {
-
 void initUi(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -37,7 +35,6 @@ void initSockc(int argc, char* argv[])
     portal.run();
 }
 
-}
 
 int main(int argc, char* argv[])
 {

@@ -3,7 +3,7 @@ android-no-sdk {
     export(target.path)
     INSTALLS += target
 } else:android {
-    INCLUDEPATH += /usr/include/c++/4.9 /usr/include/x86_64-linux-gnu/c++/4.9 /usr/include/x86_64-linux-gnu /usr/include/c++/4.9/backward /usr/lib/gcc/x86_64-linux-gnu/4.9/include /usr/local/include /usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed /usr/include
+#    INCLUDEPATH += /usr/include/c++/4.9 /usr/include/x86_64-linux-gnu/c++/4.9 /usr/include/x86_64-linux-gnu /usr/include/c++/4.9/backward /usr/lib/gcc/x86_64-linux-gnu/4.9/include /usr/local/include /usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed /usr/include
     x86 {
         target.path = /libs/x86
     } else: armeabi-v7a {
